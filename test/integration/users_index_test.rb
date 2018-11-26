@@ -8,25 +8,25 @@ class UsersIndexTest < ActionDispatch::IntegrationTest
   end
 
   test "index as admin including pagination and delete links" do
-    log_in_as(@admin)
-    get users_path
-    assert_template 'users/index'
-    assert_select 'div.pagination'
-    first_page_of_users = User.paginate(page: 1)
-    first_page_of_users.each do |user|
-      assert_select 'a[href=?]', user_path(user), text: user.name
-      unless user == @admin
-        assert_select 'a[href=?]', user_path(user), text: 'delete'
+    log_in_as(@admin)														#adminとしてログイン
+    get users_path															#indexにgetアクションで飛ぶ
+    assert_template 'users/index'											#users/indexアクションで指定されたテンプレートが描写されているか確認
+    assert_select 'div.pagination'											#ページネーションが存在しているか確認
+    first_page_of_users = User.paginate(page: 1)							#index内の１ページ目がユーザーモデルのpaginate(page: 1)に対応するか確認
+    first_page_of_users.each do |user|										#indexの１ページ目の中のデータを走査
+      assert_select 'a[href=?]', user_path(user), text: user.name			#showページへのリンクがあるか
+      unless user == @admin 												#adminじゃない限り
+        assert_select 'a[href=?]', user_path(user), text: 'delete'			#deleteボタンが表示されるか確認
       end
     end
-    assert_difference 'User.count', -1 do
-      delete user_path(@non_admin)
+    assert_difference 'User.count', -1 do									#この処理の間にUser.countの数が-1になってたらtrue
+      delete user_path(@non_admin)											#adminじゃないユーザーを消す
     end
   end
 
   test "index as non-admin" do
-    log_in_as(@non_admin)
-    get users_path
-    assert_select 'a', text: 'delete', count: 0
+    log_in_as(@non_admin)													#adminじゃないユーザーとしてログイン
+    get users_path															#indexページにgetアクションで飛ぶ
+    assert_select 'a', text: 'delete', count: 0								#aタグのdeleteと書かれたものが０個であることを確認
   end
 end
